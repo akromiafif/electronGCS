@@ -1,0 +1,42 @@
+body {
+    background-color: #2d4059;
+}
+
+img {
+    /* border: 1px solid red; */
+    width: 200px;
+    margin: 20px;
+}
+
+#content {
+    margin: 0 auto;
+    margin-top: 50px;
+    width: 80%;
+    text-align: center;
+    /* border: 1px solid blue; */
+}
+
+button {
+    border-radius: 100%;
+    width: 150px;
+    height: 150px;
+    display: inline-block;
+    background-color: #2d4059;
+    border: 3px solid #F49300;
+    outline: none;
+}
+
+button:hover {
+    cursor: pointer;
+    background-color: #F49300;
+}
+
+button p:hover {
+    color: #2d4059;
+}
+
+button p {
+    color: white;
+    font-size: 14px;
+    font-family: 'Bungee Inline', cursive;
+}

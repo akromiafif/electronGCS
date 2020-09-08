@@ -1,0 +1,22 @@
+{
+  "name": "electrongcs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ifrunistuttgart/node-mavlink": "^0.1.2",
+    "axios": "^0.19.2",
+    "cors": "^2.8.5",
+    "electron": "^9.2.0",
+    "mavlink": "^1.0.1",
+    "serialport": "^9.0.0"
+  },
+  "devDependencies": {
+    "electron-rebuild": "^1.11.0"
+  }
+}

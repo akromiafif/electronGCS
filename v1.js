@@ -92,14 +92,19 @@ mavLinkv1receive.on('ready', function (){
             att.seq = fields.seq
         });
 
-        // mavLinkv1receive.on("MISSION_COUNT", function (message, fields) {
-        //     console.log(fields);
-        // });
-
         mavLinkv1receive.on("MISSION_COUNT", function(message, fields) {
             // console.log(fields);
             att.count = fields.count
         });
+        
+        // mavLinkv1receive.on("MISSION_ITEM_REACHED", function(message, fields) {
+        //     console.log(fields);
+        //     console.log("Mission reached");
+        // });
+        // mavLinkv1receive.on("MISSION_CURRENT", function(message, fields) {
+        //     console.log(fields);
+        //     console.log("Mission current");
+        // });
     });
 });
 

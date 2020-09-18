@@ -9,9 +9,10 @@ let urls = "http://localhost:8080/";
 
 const startBtn = document.getElementById('startMav');
 startBtn.addEventListener('click', function (event) {
-    console.log("RUNNING");
-    GET_COORDINATE();
+    // console.log("RUNNING");
+    // GET_COORDINATE();
     START_MAVLINK();
+    DOWNLOAD_MISSION();
 });
 
 function GET_COORDINATE() {
@@ -25,6 +26,7 @@ function GET_COORDINATE() {
             id.push(response['data'].children[0]._id);
 
             if (id.length > 2) {
+                id.shift();
                 if (id[id.length-1] != id[id.length-2]) {
                     coordinates = response['data'].children;
                     SEND_WAYPOINT(coordinates);
@@ -59,7 +61,7 @@ function SEND_WAYPOINT(coordinate) {
 
     setTimeout(() => {
         MISSION_COUNT(len);
-    }, 4000);
+    }, 1000);
 
     setTimeout(() => {
         setInterval(() => {
@@ -69,7 +71,7 @@ function SEND_WAYPOINT(coordinate) {
             }
             counter += 1;
         }, 1000);
-    }, 5000);
+    }, 1000);
     /* -------------------------------- */
 }
 
@@ -128,49 +130,49 @@ function START_MAVLINK() {
     }, 3000);
 }
 
-// function MISSION_REQUEST_LIST() {
-//     let download = '';
-//     v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
-//         'target_system': 1,
-//         'target_component': 255,
-//         'mission_type': 0
-//     }, function (message) {
-//         console.log('v1 MISSION_REQUEST_LIST');
-//         download = message.buffer;
-//     });
-//     serialport.write(download);
-// }
+function MISSION_REQUEST_LIST() {
+    let download = '';
+    v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
+        'target_system': 1,
+        'target_component': 255,
+        'mission_type': 0
+    }, function (message) {
+        console.log('v1 MISSION_REQUEST_LIST');
+        download = message.buffer;
+    });
+    serialport.write(download);
+}
 
-// function MISSION_REQUEST_INT(seq) {
-//     let request = '';
-//     v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
-//         'target_system': 1,
-//         'target_component': 255,
-//         'seq': seq,
-//         'mission_type': 0
-//     }, function (message) {
-//         console.log('v1 MISSION_REQUEST_LIST');
-//         request = message.buffer;
-//     });
-//     serialport.write(request);
-// }
+function MISSION_REQUEST_INT(seq) {
+    let request = '';
+    v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
+        'target_system': 1,
+        'target_component': 255,
+        'seq': seq,
+        'mission_type': 0
+    }, function (message) {
+        console.log('v1 MISSION_REQUEST_LIST');
+        request = message.buffer;
+    });
+    serialport.write(request);
+}
 
-// function DOWNLOAD_MISSION() {
-//     let counter = 0;
-//     setTimeout(() => {
-//         MISSION_REQUEST_LIST();
-//     }, 4000);
+function DOWNLOAD_MISSION() {
+    let counter = 0;
+    setTimeout(() => {
+        MISSION_REQUEST_LIST();
+    }, 4000);
 
-//     setTimeout(() => {
-//         setInterval(() => {
-//             let count = v1.att.count - 1;
-//             if (counter <= count) {
-//                 v1.MISSION_REQUEST_INT(count);
-//             }
-//             counter += 1;
-//         }, 1000);
-//     }, 5000);
-// }
+    setTimeout(() => {
+        setInterval(() => {
+            let count = v1.att.count - 1;
+            if (counter <= count) {
+                v1.MISSION_REQUEST_INT(count);
+            }
+            counter += 1;
+        }, 1000);
+    }, 5000);
+}
 
 
 function startMavlink() {

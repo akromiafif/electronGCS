@@ -24,10 +24,6 @@ exports.mavLinkv2.on('HEARTBEAT', function (message) {
     console.log('v2 dapet heartbeat...');
 });
 
-mavLinkv2.on("ATTITUDE", function(message, fields) {
-    console.log(fields);
-});
-
 exports.mavLinkv2.on('PARAM_VALUE', function (message) {
     //Karena library v2 ga support param_id, identifiernya pake param_index
     if (message.param_index == v1_js_1.proto_ver_index) {

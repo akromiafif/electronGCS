@@ -11,8 +11,10 @@ const startBtn = document.getElementById('startMav');
 startBtn.addEventListener('click', function (event) {
     // console.log("RUNNING");
     // GET_COORDINATE();
+    // DOWNLOAD_MISSION();
+
     START_MAVLINK();
-    DOWNLOAD_MISSION();
+    // START_MAVLINK.readAllParameters();
 });
 
 function GET_COORDINATE() {
@@ -128,214 +130,271 @@ function START_MAVLINK() {
             console.log("Failed to start");
         }
     }, 3000);
-}
 
-function MISSION_REQUEST_LIST() {
-    let download = '';
-    v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
-        'target_system': 1,
-        'target_component': 255,
-        'mission_type': 0
-    }, function (message) {
-        console.log('v1 MISSION_REQUEST_LIST');
-        download = message.buffer;
-    });
-    serialport.write(download);
-}
+    /////////////////////////////////
+    //PARAMETER OPERATIONS///////////
+    /////////////////////////////////
 
-function MISSION_REQUEST_INT(seq) {
-    let request = '';
-    v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
-        'target_system': 1,
-        'target_component': 255,
-        'seq': seq,
-        'mission_type': 0
-    }, function (message) {
-        console.log('v1 MISSION_REQUEST_LIST');
-        request = message.buffer;
-    });
-    serialport.write(request);
-}
+    /*
+    Operasi-operasi parameter ada 3 langkahnya :
+    1. inisialisasi operasi : 
+        jika FC meggunakan v2, menge-set MAVLink FC menjadi v1, 
+        dan GCS juga menjadi v1 (agar dpt menggunakan library v1 
+        yg support dgn parameter).
+    2. eksekusi operasi : 
+        lakukan operasi read all, read single, atau write.
+    3. terminasi operasi : 
+        jika FC menggunakan v2, menge-set MAVLink FC menjadi v2
+        kembali, dan GCS juga menjadi v2 kembali.
+    */
 
-function DOWNLOAD_MISSION() {
-    let counter = 0;
-    setTimeout(() => {
-        MISSION_REQUEST_LIST();
-    }, 4000);
-
-    setTimeout(() => {
-        setInterval(() => {
-            let count = v1.att.count - 1;
-            if (counter <= count) {
-                v1.MISSION_REQUEST_INT(count);
-            }
-            counter += 1;
-        }, 1000);
-    }, 5000);
-}
-
-/////////////////////////////////
-//PARAMETER OPERATIONS///////////
-/////////////////////////////////
-
-/*
-Operasi-operasi parameter ada 3 langkahnya :
-1. inisialisasi operasi : 
-    jika FC meggunakan v2, menge-set MAVLink FC menjadi v1, 
-    dan GCS juga menjadi v1 (agar dpt menggunakan library v1 
-    yg support dgn parameter).
-2. eksekusi operasi : 
-    lakukan operasi read all, read single, atau write.
-3. terminasi operasi : 
-    jika FC menggunakan v2, menge-set MAVLink FC menjadi v2
-    kembali, dan GCS juga menjadi v2 kembali.
-*/
-
-//Inisialisasi operasi parameter
-/*
-To-do list:
-- bikin mekanisme untuk acknowledge bhw FC telah diset mjd v1
-*/
-function initialize_param_operation() {
-    if (FC_v2_compatibility) {
-        console.log('set FC to v1...');
-        set_FC_to_v1();
-        use_v1 = true;
+    //Inisialisasi operasi parameter
+    /*
+    To-do list:
+    - bikin mekanisme untuk acknowledge bhw FC telah diset mjd v1
+    */
+    function initialize_param_operation() {
+        if (FC_v2_compatibility) {
+            console.log('set FC to v1...');
+            set_FC_to_v1();
+            use_v1 = true;
+        }
     }
-}
 
-//Terminasi operasi parameter
-/*
-To-do list:
-- bikin mekanisme untuk acknowledge bhw FC telah diset mjd v2.
-saran : mungkin kalo gabisa lewat param_value, lewat heartbeat aja
-acknowledgenya.
-*/
-function terminate_param_operation() {
-    if (FC_v2_compatibility) {
-        console.log('set FC to v2...');
-        set_FC_to_v2();
-        use_v1 = false;
+    //Terminasi operasi parameter
+    /*
+    To-do list:
+    - bikin mekanisme untuk acknowledge bhw FC telah diset mjd v2.
+    saran : mungkin kalo gabisa lewat param_value, lewat heartbeat aja
+    acknowledgenya.
+    */
+    function terminate_param_operation() {
+        if (FC_v2_compatibility) {
+            console.log('set FC to v2...');
+            set_FC_to_v2();
+            use_v1 = false;
+        }
     }
-}
 
 
-//Fungsi mengirim param_set untuk mengubah mavlink FC jadi v1
-function set_FC_to_v1() {
-    //Hardcoded karena keterbatasan library
-    let buf_set_to_v1 = Buffer.from([253,23,0,0,0,1,255,23,
-        0,0,1,0,0,0,1,1,77,65,86,95,80,82,79,84,79,95,86,69,
-        82,0,204,255,6,111,118]);
-    serialport.write(buf_set_to_v1);
-}
+    //Fungsi mengirim param_set untuk mengubah mavlink FC jadi v1
+    function set_FC_to_v1() {
+        //Hardcoded karena keterbatasan library
+        let buf_set_to_v1 = Buffer.from([253,23,0,0,0,1,255,23,
+            0,0,1,0,0,0,1,1,77,65,86,95,80,82,79,84,79,95,86,69,
+            82,0,204,255,6,111,118]);
+        serialport.write(buf_set_to_v1);
+    }
 
 
-//Fungsi mengirim param_set untuk mengubah mavlink FC jadi v2
-function set_FC_to_v2() {
-    //Hardcoded karena keterbatasan library
-    let buf_set_to_v2 = Buffer.from([253,23,0,0,0,1,255,23,0,
-        0,2,0,0,0,1,1,77,65,86,95,80,82,79,84,79,
-        95,86,69,82,0,204,255,6,163,155]);
-    serialport.write(buf_set_to_v2);
-}
+    //Fungsi mengirim param_set untuk mengubah mavlink FC jadi v2
+    function set_FC_to_v2() {
+        //Hardcoded karena keterbatasan library
+        let buf_set_to_v2 = Buffer.from([253,23,0,0,0,1,255,23,0,
+            0,2,0,0,0,1,1,77,65,86,95,80,82,79,84,79,
+            95,86,69,82,0,204,255,6,163,155]);
+        serialport.write(buf_set_to_v2);
+    }
 
 
-//Operasi membaca semua parameter
-/*
-To-do list:
-- bikin mekanisme untuk request parameter yang hilang
-- efisienkan lagi setTimeout setTimeoutnya
-*/
-function readAllParameters() {
-    console.log('\nREADING ALL PARAMETERS');
-    console.log('initializing param operation');
-    initialize_param_operation();
+    //Operasi membaca semua parameter
+    /*
+    To-do list:
+    - bikin mekanisme untuk request parameter yang hilang
+    - efisienkan lagi setTimeout setTimeoutnya
+    */
+    function readAllParameters() {
+        console.log('\nREADING ALL PARAMETERS');
+        console.log('initializing param operation');
+        initialize_param_operation();
 
-    setTimeout(()=>{
-        v1.mavLinkv1send.createMessage('PARAM_REQUEST_LIST',{
-            target_system : 1,
-            target_component : 255
-        }, function (message) {
-            console.log('request param');
-            serialport.write(message.buffer);
-        });
-    },4000);
-
-    setTimeout(()=>{
-        console.log('terminating param operation');
-        terminate_param_operation();
-    },10000);
-};
-
-
-//Operasi membaca satu parameter
-/*
-To-do list:
-- bikin mekanisme untuk request parameter kalo message tdk diterima
-- efisienkan lagi setTimeout setTimeoutnya
-*/
-function readSingleParameter(identifier,use_index) {
-    console.log('\nREADING SINGLE PARAMETERS');
-    console.log('initializing param operation');
-    initialize_param_operation();
-
-    setTimeout(()=>{
-        if (use_index) {
-            v1.mavLinkv1send.createMessage('PARAM_REQUEST_READ',{
+        setTimeout(()=>{
+            v1.mavLinkv1send.createMessage('PARAM_REQUEST_LIST',{
                 target_system : 1,
-                target_component : 1,
-                param_id : '',
-                param_index : identifier
+                target_component : 255
             }, function (message) {
-                console.log('request single param');
+                console.log('request param');
                 serialport.write(message.buffer);
             });
-        } else {
-            v1.mavLinkv1send.createMessage('PARAM_REQUEST_READ',{
+        },4000);
+
+        setTimeout(()=>{
+            console.log('terminating param operation');
+            terminate_param_operation();
+        },10000);
+    };
+
+
+    //Operasi membaca satu parameter
+    /*
+    To-do list:
+    - bikin mekanisme untuk request parameter kalo message tdk diterima
+    - efisienkan lagi setTimeout setTimeoutnya
+    */
+    function readSingleParameter(identifier,use_index) {
+        console.log('\nREADING SINGLE PARAMETERS');
+        console.log('initializing param operation');
+        initialize_param_operation();
+
+        setTimeout(()=>{
+            if (use_index) {
+                v1.mavLinkv1send.createMessage('PARAM_REQUEST_READ',{
+                    target_system : 1,
+                    target_component : 1,
+                    param_id : '',
+                    param_index : identifier
+                }, function (message) {
+                    console.log('request single param');
+                    serialport.write(message.buffer);
+                });
+            } else {
+                v1.mavLinkv1send.createMessage('PARAM_REQUEST_READ',{
+                    target_system : 1,
+                    target_component : 1,
+                    param_id : identifier,
+                    param_index : -1
+                }, function (message) {
+                    console.log('request single param');
+                    serialport.write(message.buffer);
+                });
+            };
+        },4000);
+
+        setTimeout(()=>{
+            console.log('terminating param operation');
+            terminate_param_operation();
+        },8000);
+    };
+
+
+    //Operasi menulis parameter
+    /*
+    To-do list:
+    - bikin mekanisme untuk menunggu acknowledge berupa PARAM_VALUE dr FC
+    - efisienkan lagi setTimeout setTimeoutnya
+    */
+    function writeParameter(param_id,param_value,param_type) {
+        console.log('\n\nWRITING PARAMETER\n\n');
+        console.log('initializing param operation');
+        initialize_param_operation();
+
+        setTimeout(()=>{
+            v1.mavLinkv1send.createMessage('PARAM_SET',{
                 target_system : 1,
                 target_component : 1,
-                param_id : identifier,
-                param_index : -1
+                param_id : param_id,
+                param_value : param_value,
+                param_type : param_type
             }, function (message) {
-                console.log('request single param');
+                console.log('writing param');
                 serialport.write(message.buffer);
             });
-        };
-    },4000);
+        },4000);
 
-    setTimeout(()=>{
-        console.log('terminating param operation');
-        terminate_param_operation();
-    },8000);
-};
+        setTimeout(()=>{
+            console.log('terminating param operation');
+            terminate_param_operation();
+        },8000);
+    }
 
-
-//Operasi menulis parameter
-/*
-To-do list:
-- bikin mekanisme untuk menunggu acknowledge berupa PARAM_VALUE dr FC
-- efisienkan lagi setTimeout setTimeoutnya
-*/
-function writeParameter(param_id,param_value,param_type) {
-    console.log('\n\nWRITING PARAMETER\n\n');
-    console.log('initializing param operation');
-    initialize_param_operation();
-
-    setTimeout(()=>{
-        v1.mavLinkv1send.createMessage('PARAM_SET',{
-            target_system : 1,
-            target_component : 1,
-            param_id : param_id,
-            param_value : param_value,
-            param_type : param_type
-        }, function (message) {
-            console.log('writing param');
-            serialport.write(message.buffer);
-        });
-    },4000);
-
-    setTimeout(()=>{
-        console.log('terminating param operation');
-        terminate_param_operation();
-    },8000);
+    START_MAVLINK.readAllParameters = readAllParameters;
+    START_MAVLINK.readSingleParameter = readSingleParameter;
+    START_MAVLINK.writeParameter = writeParameter;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// function MISSION_REQUEST_LIST() {
+//     let download = '';
+//     v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
+//         'target_system': 1,
+//         'target_component': 255,
+//         'mission_type': 0
+//     }, function (message) {
+//         console.log('v1 MISSION_REQUEST_LIST');
+//         download = message.buffer;
+//     });
+//     serialport.write(download);
+// }
+
+// function MISSION_REQUEST_INT(seq) {
+//     let request = '';
+//     v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
+//         'target_system': 1,
+//         'target_component': 255,
+//         'seq': seq,
+//         'mission_type': 0
+//     }, function (message) {
+//         console.log('v1 MISSION_REQUEST_LIST');
+//         request = message.buffer;
+//     });
+//     serialport.write(request);
+// }
+
+// function DOWNLOAD_MISSION() {
+//     let counter = 0;
+//     setTimeout(() => {
+//         MISSION_REQUEST_LIST();
+//     }, 4000);
+
+//     setTimeout(() => {
+//         setInterval(() => {
+//             let count = v1.att.count - 1;
+//             if (counter <= count) {
+//                 v1.MISSION_REQUEST_INT(count);
+//             }
+//             counter += 1;
+//         }, 1000);
+//     }, 5000);
+// }

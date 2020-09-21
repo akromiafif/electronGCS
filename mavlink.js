@@ -9,22 +9,19 @@ let urls = "http://localhost:8080/";
 
 const startBtn = document.getElementById('startMav');
 startBtn.addEventListener('click', function (event) {
-    // console.log("RUNNING");
     // GET_COORDINATE();
-    // DOWNLOAD_MISSION();
-
     START_MAVLINK();
-    // START_MAVLINK.readAllParameters();
+    START_MAVLINK.readAllParameters();
 });
 
 function GET_COORDINATE() {
     let id = [];
     let coordinates = [];
+    // let counter = 0;
 
     setInterval(() => {
         axios.get(urls+'api/waypoints')
         .then(function (response) {
-            // console.log(response);
             id.push(response['data'].children[0]._id);
 
             if (id.length > 2) {
@@ -32,6 +29,8 @@ function GET_COORDINATE() {
                 if (id[id.length-1] != id[id.length-2]) {
                     coordinates = response['data'].children;
                     SEND_WAYPOINT(coordinates);
+                    // counter++;
+                    // console.log(counter);
                 }
             }
         })
@@ -58,20 +57,23 @@ function SEND_WAYPOINT(coordinate) {
     /* Algoritma untuk mengirim WAYPOINT */
     let len = coordinate.length;
     let counter = 0;
-    let latitude = coordinate[counter].latitude;
-    let longitude = coordinate[counter].longitude;
 
     setTimeout(() => {
         MISSION_COUNT(len);
     }, 1000);
 
     setTimeout(() => {
-        setInterval(() => {
+        let intervalSend = setInterval(() => {
             let seq = v1.att.seq;
             if (counter < len) {
+                let latitude = coordinate[counter].latitude;
+                let longitude = coordinate[counter].longitude;
                 v1.NAV_WAYPOINT(serialport, latitude, longitude, seq);
+                counter += 1;
+                // console.log("SEND Counter: " + counter);
+            } else {
+                clearInterval(intervalSend);
             }
-            counter += 1;
         }, 1000);
     }, 1000);
     /* -------------------------------- */
@@ -231,7 +233,7 @@ function START_MAVLINK() {
     - bikin mekanisme untuk request parameter kalo message tdk diterima
     - efisienkan lagi setTimeout setTimeoutnya
     */
-    function readSingleParameter(identifier,use_index) {
+    function readSingleParameter(identifier, use_index) {
         console.log('\nREADING SINGLE PARAMETERS');
         console.log('initializing param operation');
         initialize_param_operation();
@@ -273,7 +275,7 @@ function START_MAVLINK() {
     - bikin mekanisme untuk menunggu acknowledge berupa PARAM_VALUE dr FC
     - efisienkan lagi setTimeout setTimeoutnya
     */
-    function writeParameter(param_id,param_value,param_type) {
+    function writeParameter(param_id, param_value, param_type) {
         console.log('\n\nWRITING PARAMETER\n\n');
         console.log('initializing param operation');
         initialize_param_operation();
@@ -301,100 +303,3 @@ function START_MAVLINK() {
     START_MAVLINK.readSingleParameter = readSingleParameter;
     START_MAVLINK.writeParameter = writeParameter;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// function MISSION_REQUEST_LIST() {
-//     let download = '';
-//     v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
-//         'target_system': 1,
-//         'target_component': 255,
-//         'mission_type': 0
-//     }, function (message) {
-//         console.log('v1 MISSION_REQUEST_LIST');
-//         download = message.buffer;
-//     });
-//     serialport.write(download);
-// }
-
-// function MISSION_REQUEST_INT(seq) {
-//     let request = '';
-//     v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST ", {
-//         'target_system': 1,
-//         'target_component': 255,
-//         'seq': seq,
-//         'mission_type': 0
-//     }, function (message) {
-//         console.log('v1 MISSION_REQUEST_LIST');
-//         request = message.buffer;
-//     });
-//     serialport.write(request);
-// }
-
-// function DOWNLOAD_MISSION() {
-//     let counter = 0;
-//     setTimeout(() => {
-//         MISSION_REQUEST_LIST();
-//     }, 4000);
-
-//     setTimeout(() => {
-//         setInterval(() => {
-//             let count = v1.att.count - 1;
-//             if (counter <= count) {
-//                 v1.MISSION_REQUEST_INT(count);
-//             }
-//             counter += 1;
-//         }, 1000);
-//     }, 5000);
-// }

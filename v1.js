@@ -96,6 +96,10 @@ mavLinkv1receive.on('ready', function (){
             // console.log(fields);
             att.count = fields.count
         });
+
+        mavLinkv1receive.on("PARAM_VALUE", function(message, fields) {
+            console.log(fields);
+        });
         
         // mavLinkv1receive.on("MISSION_ITEM_REACHED", function(message, fields) {
         //     console.log(fields);
@@ -138,6 +142,7 @@ function RTLV1(serialport) {
 
 exports.RTLV1 = RTLV1;
 
+/* http://mavlink.io */
 function NAV_WAYPOINT(serialport, lat, long, seq) {
     // setTimeout(() => {
         let waypoint = '';

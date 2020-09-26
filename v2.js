@@ -1,4 +1,23 @@
 "use strict";
+
+let att = {
+    time_boot_ms: 0,
+    pitch: 0,
+    roll: 0,
+    yaw: 0,
+    rollspeed: 0,
+    pitchspeed: 0,
+    yawspeed: 0,
+    airspeed: 0,
+    groundspeed: 0,
+    heading: 0,
+    throtlle: 0,
+    alt: 0,
+    climb: 0,
+    seq: 0,
+    count: 0
+}
+
 /*************
 Initialization
 **************/
@@ -9,6 +28,7 @@ var message_registry_1 = require("./assets/message-registry");
 var heartbeat_1 = require("./assets/messages/heartbeat");
 var v1_js_1 = require("./v1.js");
 exports.mavLinkv2 = new node_mavlink_1.MAVLinkModule(message_registry_1.messageRegistry, 1, true);
+
 /********
 Receiving
 *********/
@@ -16,12 +36,18 @@ exports.mavLinkv2.on('message', function (message) {
     //handle message
     //console.log(message);
 });
+
 exports.mavLinkv2.on('error', function (e) {
     //handle error
 });
+
 exports.mavLinkv2.on('HEARTBEAT', function (message) {
     //handle heartbeat
     console.log('v2 dapet heartbeat...');
+});
+
+exports.mavLinkv2.on('ATTITUDE', function (message) {
+    console.log('v2 dapet attitude...');
 });
 
 exports.mavLinkv2.on('PARAM_VALUE', function (message) {

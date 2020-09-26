@@ -3,15 +3,15 @@ Initialization
 **************/
 
 //Requiring module
-var mavlinkv1module = require('mavlink');
+let mavlinkv1module = require('mavlink');
 
 //MAVLink object
-var mavLinkv1receive = new mavlinkv1module(0,0,"v1.0",["common"]);
-var mavLinkv1send = new mavlinkv1module(1,255,"v1.0",["common"]);
+let mavLinkv1receive = new mavlinkv1module(0,0,"v1.0",["common"]);
+let mavLinkv1send = new mavlinkv1module(1,255,"v1.0",["common"]);
 exports.mavLinkv1receive = mavLinkv1receive;
 exports.mavLinkv1send = mavLinkv1send;
 
-var att = {
+let att = {
     time_boot_ms: 0,
     pitch: 0,
     roll: 0,
@@ -30,13 +30,6 @@ var att = {
 }
 
 let parameters = [];
-let parametersObject = {
-    // param_count: 0,
-    // param_id: "HOME",
-    // param_index: 0,
-    // param_type: 0,
-    // param_value: 0
-};
 
 //Nunggu sampe module mavlink ready
 mavLinkv1receive.on('ready', function (){

@@ -4,8 +4,8 @@ let v1 = require("./v1.js");
 let cors = require("cors");
 let axios = require("axios");
 
-// let urls = "https://aksantara3301.herokuapp.com/";
-let urls = "http://localhost:8080/";
+let urls = "https://aksantara3301.herokuapp.com/";
+// let urls = "http://localhost:8080/";
 
 /* ONCLICK BUTTON BUAT STARTMAVLINK */
 const startBtn = document.getElementById('startMav');

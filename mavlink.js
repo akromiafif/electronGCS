@@ -4,8 +4,8 @@ let v1 = require("./v1.js");
 let cors = require("cors");
 let axios = require("axios");
 
-let urls = "https://aksantara3301.herokuapp.com/";
-// let urls = "http://localhost:8080/";
+// let urls = "https://aksantara3301.herokuapp.com/";
+let urls = "http://localhost:8080/";
 
 /* ONCLICK BUTTON BUAT STARTMAVLINK */
 const startBtn = document.getElementById('startMav');
@@ -17,20 +17,17 @@ startBtn.addEventListener('click', function (event) {
 
 const readParam = document.getElementById('readParam');
 readParam.addEventListener('click', function (event) {
-    if (use_v1) {
-        v1.readAllParameters(serialport, v1, FC_v2_compatibility, use_v1);
-    }
+    // v1.readAllParameters(serialport, v1, FC_v2_compatibility, use_v1);
 
-    setTimeout(() => {
-        axios({
-            method: "post",
-            url: urls+"api/parameter",
-            data: v1.parameters
-        });
+    // setTimeout(() => {
+    //     let listParameters = v1.parameters;
+    //     console.log(listParameters);
+    //     console.log("Parameter has been sent");
 
-        console.log("Parameter has been sent");
-    }, 20000);
+    // }, 16000);
 });
+
+let timeToGet = false;
 
 function sendParams() {
     if (use_v1) {
@@ -38,14 +35,17 @@ function sendParams() {
     }
 
     setTimeout(() => {
-        axios({
-            method: "post",
-            url: urls+"api/parameter",
-            data: v1.parameters
-        });
+        axios.post(urls+"api/parameter", v1.parameters)
+            .then(function (response) {
+            console.log(response);
+            }) 
+            .catch(function (error) {
+                console.log(error);
+            });
 
         console.log(v1.parameters);
         console.log("Parameter has been sent");
+        timToGet = true;
     }, 16000);
 }
 
@@ -56,23 +56,31 @@ let FC_v2_compatibility = false;
 let isInialize = false;
 /* VARIABLE BUAT MAVLINK */
 
+/* INTERVAL SEND PARAMETER */
 let sendParamInterval = setInterval(() => {
     if (isInialize) {
         axios.get(urls + "api/btnparams")
         .then(function (response) {
-            // handle success
-            let isClickedBtn = response.data.isClicked;
-            // console.log(isClickedBtn);
-            if (isClickedBtn) {
+            if (response.data.isClickedBtn) {
                 sendParams();
+
+                axios.post(urls+"api/btnparam", { isClicked: false, timToGet: timeToGet })
+                .then(function (response) {
+                console.log(response);
+                }) 
+                .catch(function (error) {
+                    console.log(error);
+                });
             }
+
+            console.log(response.data);
         })
         .catch(function (error) {
-            // handle error
             console.log(error);
         });
     }
-}, 5000);
+}, 3000);
+/* INTERVAL SEND PARAMETER */
 
 /*  --------------------------------- MAVLINK --------------------------------- */
 function START_MAVLINK() {
@@ -113,11 +121,15 @@ function START_MAVLINK() {
                 }
             });
             setInterval(() => {
-                axios({
-                    method: "post",
-                    url: urls+"api/flightdata",
-                    data: v1.att,
-                });
+                if (isInialize) {
+                    axios.post(urls+"api/flightdata", v1.att)
+                      .then(function (response) {
+                        // console.log(response);
+                    })
+                      .catch(function (error) {
+                        console.log(error);
+                    });
+                }
             }, 200);
         } else {
             console.log("Failed to start");

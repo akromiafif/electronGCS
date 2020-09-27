@@ -30,6 +30,7 @@ let att = {
 }
 
 let parameters = [];
+let i = 0;
 
 //Nunggu sampe module mavlink ready
 mavLinkv1receive.on('ready', function (){
@@ -100,9 +101,15 @@ mavLinkv1receive.on('ready', function (){
         });
 
         mavLinkv1receive.on("PARAM_VALUE", function(message, fields) {
-            // console.log(fields);
-            parametersObject = fields;
-            parameters.push(parametersObject);
+            if (i > 342) {
+                parameters = [];
+                i = 0;
+            }
+            
+            parameters.push(fields);
+            console.log(i);
+            i++;
+            
         });
         
         // mavLinkv1receive.on("MISSION_ITEM_REACHED", function(message, fields) {
@@ -301,12 +308,12 @@ function readAllParameters(serialport, v1, FC_v2_compatibility, use_v1) {
             console.log('request param');
             serialport.write(message.buffer);
         });
-    },4000);
+    }, 4000);
 
     setTimeout(()=>{
         console.log('terminating param operation');
         terminate_param_operation(FC_v2_compatibility, use_v1);
-    },10000);
+    }, 10000);
 };
 
 exports.readAllParameters = readAllParameters;

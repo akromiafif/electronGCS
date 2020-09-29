@@ -107,7 +107,7 @@ mavLinkv1receive.on('ready', function (){
             }
             
             parameters.push(fields);
-            console.log(i);
+            // console.log(i);
             i++;
             
         });

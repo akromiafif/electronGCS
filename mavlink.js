@@ -4,8 +4,8 @@ let v1 = require("./v1.js");
 let cors = require("cors");
 let axios = require("axios");
 
-// let urls = "https://aksantara3301.herokuapp.com/";
-let urls = "http://localhost:8080/";
+let urls = "https://aksantara3301.herokuapp.com/";
+// let urls = "http://localhost:8080/";
 
 /* ONCLICK BUTTON BUAT STARTMAVLINK */
 const startBtn = document.getElementById('startMav');
@@ -17,14 +17,7 @@ startBtn.addEventListener('click', function (event) {
 
 const readParam = document.getElementById('readParam');
 readParam.addEventListener('click', function (event) {
-    // v1.readAllParameters(serialport, v1, FC_v2_compatibility, use_v1);
-
-    // setTimeout(() => {
-    //     let listParameters = v1.parameters;
-    //     console.log(listParameters);
-    //     console.log("Parameter has been sent");
-
-    // }, 16000);
+    sendParams();
 });
 
 let timeToGet = false;

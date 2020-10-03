@@ -4,8 +4,8 @@ let v1 = require("./v1.js");
 let cors = require("cors");
 let axios = require("axios");
 
-let urls = "https://aksantara3301.herokuapp.com/";
-// let urls = "http://localhost:8080/";
+// let urls = "https://aksantara3301.herokuapp.com/";
+let urls = "http://localhost:8080/";
 
 /* ONCLICK BUTTON BUAT STARTMAVLINK */
 const startBtn = document.getElementById('startMav');
@@ -17,12 +17,24 @@ startBtn.addEventListener('click', function (event) {
 
 const readParam = document.getElementById('readParam');
 readParam.addEventListener('click', function (event) {
-    sendParams();
+    v1.readAllParameters(serialport, v1, FC_v2_compatibility, use_v1);
+
+    setTimeout(() => {
+        console.log(v1.parameters);
+    }, 15000);
 });
 
-let timeToGet = false;
+const sendParam = document.getElementById('sendParam');
+sendParam.addEventListener('click', function (event) {
+    console.log("Hello");
+    // v1.writeParameter("SERIAL0_BAUD", 115, 6, serialport, v1, FC_v2_compatibility, use_v1);
 
-function sendParams() {
+    // getNewParamsFromServer();
+    sendParamsToFC();
+});
+
+
+function sendParamsToGCS() {
     if (use_v1) {
         v1.readAllParameters(serialport, v1, FC_v2_compatibility, use_v1);
     }
@@ -42,6 +54,62 @@ function sendParams() {
     }, 16000);
 }
 
+function sendParamsToFC(newParams) {
+    let newParamaters = [
+                {
+                    _id: '5f7330039e57f52550c33b36',
+                    param_value: 100,
+                    param_count: 343,
+                    param_index: 42,
+                    param_id: "WP_RADIUS",
+                    param_type: 4
+                }, 
+                
+                {
+                    _id: '5f7330039e57f52550c33b37',
+                    param_value: 100,
+                    param_count: 343,
+                    param_index: 43,
+                    param_id: "WP_MAX_RADIUS",
+                    param_type: 4
+                }];
+
+    let i = 0;
+    let sendToFCInterval = setInterval(() => {
+        if (i < newParams.length) {
+            v1.writeParameter(newParams[i].param_id, newParams[i].param_value, newParams[i].param_type, serialport, v1, FC_v2_compatibility, use_v1);
+        
+            // console.log(newParamaters[i]);
+            // console.log(newParamaters[i].param_id);
+            // console.log(newParamaters[i].param_value);
+            // console.log(newParamaters[i].param_type);
+        }
+        
+        if (i > newParams.length) {
+            clearInterval(sendToFCInterval);
+            console.log("Finish writing paramater to FC");
+        }
+
+        i++;
+    }, 500);
+}
+
+function getNewParamsFromServer() {
+    let newParams = [];
+
+    axios.get(urls+"api/parameters")
+    .then(function (response) {
+        newParams = response.data.children;
+        console.log(newParams);
+    }) 
+    .catch(function (error) {
+        console.log(error);
+    });
+
+    sendParamsToFC(newParams);
+}
+
+
 /* VARIABLE BUAT MAVLINK */
 let use_v1 = false;
 exports.use_v1 = use_v1;
@@ -49,17 +117,29 @@ let FC_v2_compatibility = false;
 let isInialize = false;
 /* VARIABLE BUAT MAVLINK */
 
-/* INTERVAL SEND PARAMETER */
-let sendParamInterval = setInterval(() => {
+/* INTERVAL SEND, GET PARAMETER */
+let btnParamInterval = setInterval(() => {
     if (isInialize) {
         axios.get(urls + "api/btnparams")
         .then(function (response) {
-            if (response.data.isClickedBtn) {
-                sendParams();
+            if (response.data.getParamBtn) {
+                sendParamsToGCS();
 
-                axios.post(urls+"api/btnparam", { isClicked: false, timToGet: timeToGet })
+                axios.post(urls+"api/btnparam", { getParamBtn: false, sendParamBtn: response.data.sendParamBtn })
                 .then(function (response) {
-                console.log(response);
+                    console.log(response);
+                }) 
+                .catch(function (error) {
+                    console.log(error);
+                });
+            }
+
+            if (response.data.sendParamBtn) {
+                getNewParamsFromServer();
+
+                axios.post(urls+"api/btnparam", { getParamBtn: response.data.getParamBtn, sendParamBtn: false })
+                .then(function (response) {
+                    console.log(response);
                 }) 
                 .catch(function (error) {
                     console.log(error);
@@ -73,7 +153,7 @@ let sendParamInterval = setInterval(() => {
         });
     }
 }, 3000);
-/* INTERVAL SEND PARAMETER */
+/* INTERVAL SEND, GET PARAMETER */
 
 /*  --------------------------------- MAVLINK --------------------------------- */
 function START_MAVLINK() {
@@ -113,7 +193,9 @@ function START_MAVLINK() {
                     v2.v2parse(data);
                 }
             });
+
             setInterval(() => {
+                // console.log(v1.att);
                 if (isInialize) {
                     axios.post(urls+"api/flightdata", v1.att)
                       .then(function (response) {

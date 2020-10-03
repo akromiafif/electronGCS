@@ -383,12 +383,12 @@ function writeParameter(param_id, param_value, param_type, serialport, v1, FC_v2
             console.log('writing param');
             serialport.write(message.buffer);
         });
-    },4000);
+    }, 100);
 
     setTimeout(()=>{
         console.log('terminating param operation');
         terminate_param_operation(FC_v2_compatibility, use_v1);
-    },8000);
+    }, 200);
 }
 
 exports.writeParameter = writeParameter;

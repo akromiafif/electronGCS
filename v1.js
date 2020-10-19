@@ -29,6 +29,12 @@ let att = {
     count: 0
 }
 
+let download = {
+    count: 0
+}
+
+let downloadedMission = [];
+
 let parameters = [];
 let i = 0;
 
@@ -96,8 +102,15 @@ mavLinkv1receive.on('ready', function (){
         });
 
         mavLinkv1receive.on("MISSION_COUNT", function(message, fields) {
+            console.log("MISSION_COUNT");
             // console.log(fields);
-            att.count = fields.count
+            download.count = fields.count;
+            att.count = fields.count;
+        });
+
+        mavLinkv1receive.on("MISSION_ITEM", function(message, fields) {
+            downloadedMission.push(fields);
+            // console.log(fields);
         });
 
         mavLinkv1receive.on("PARAM_VALUE", function(message, fields) {
@@ -129,6 +142,8 @@ function v1parse(data) {
 }
 exports.v1parse = v1parse;
 exports.att = att;
+exports.download = download;
+exports.downloadedMission = downloadedMission;
 exports.parameters = parameters;
 
 function RTLV1(serialport) {
@@ -155,25 +170,25 @@ function RTLV1(serialport) {
 exports.RTLV1 = RTLV1;
 
 /* http://mavlink.io */
-function NAV_WAYPOINT(serialport, lat, long, seq) {
+function NAV_WAYPOINT(serialport, autocontinue, command, current, frame, mission_type, param1, param2, param3, param4, target_component, target_system, x, y, z, seq) {
     // setTimeout(() => {
         let waypoint = '';
         mavLinkv1send.createMessage('MISSION_ITEM', {
-            'command': 16,
-            'param1': 0,
-            'param2': 10,
-            'param3': 0.0,
-            'param4': 10,
-            'x': lat,
-            'y': long,
-            'z': 10,
-            'target_system': 1,
-            'target_component': 255,
+            'command': command,
+            'param1': param1,
+            'param2': param2,
+            'param3': param3,
+            'param4': param4,
+            'x': x,
+            'y': y,
+            'z': z,
+            'target_system': target_system,
+            'target_component': target_component,
             'seq': seq,
-            'frame': 2,
-            'mission_type': 0,
-            'current': 1,
-            'autocontinue': 0,
+            'frame': frame,
+            'mission_type': mission_type,
+            'current': current,
+            'autocontinue': autocontinue,
         }, function(message) {
             console.log('v1 NAV_TO_WAYPOINT');
             waypoint = message.buffer;
@@ -202,21 +217,6 @@ function GPS_STATUS(serialport) {
 }
 
 exports.GPS_STATUS = GPS_STATUS;
-
-function MISSION_REQUEST_LIST(serialport) {
-    let list = '';
-    mavLinkv1send.createMessage("MISSION_REQUEST_LIST", {
-        'target_system': 1,
-        'target_component': 255
-        }, function(message) {
-            console.log("MISSION_REQUEST_LIST");
-            list = message.buffer;
-    });
-    serialport.write(list);
-}
-
-exports.MISSION_REQUEST_LIST = MISSION_REQUEST_LIST;
-
 
 /////////////////////////////////
 //PARAMETER OPERATIONS///////////

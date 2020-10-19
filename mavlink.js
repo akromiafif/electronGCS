@@ -4,8 +4,8 @@ let v1 = require("./v1.js");
 let cors = require("cors");
 let axios = require("axios");
 
-let urls = "https://aksantara3301.herokuapp.com/";
-// let urls = "http://localhost:8080/";
+// let urls = "https://aksantara3301.herokuapp.com/";
+let urls = "http://localhost:8080/";
 
 /* ONCLICK BUTTON BUAT STARTMAVLINK */
 const startBtn = document.getElementById('startMav');
@@ -17,14 +17,13 @@ startBtn.addEventListener('click', function (event) {
 
 const readParam = document.getElementById('readParam');
 readParam.addEventListener('click', function (event) {
-
+    DOWNLOAD_MISSION();
 });
 
 const sendParam = document.getElementById('sendParam');
 sendParam.addEventListener('click', function (event) {
 
 });
-
 
 /* VARIABLE BUAT MAVLINK */
 let use_v1 = false;
@@ -34,32 +33,38 @@ let isInialize = false;
 /* VARIABLE BUAT MAVLINK */
 
 /* INTERVAL SEND, GET PARAMETER */
-let btnParamInterval = setInterval(() => {
+let btnStatusInterval = setInterval(() => {
     if (isInialize) {
         axios.get(urls + "api/btnparams")
         .then(function (response) {
             if (response.data.getParamBtn) {
                 sendParamsToGCS();
-
-                axios.post(urls+"api/btnparam", { getParamBtn: false, sendParamBtn: response.data.sendParamBtn })
-                .then(function (response) {
-                    console.log(response);
-                }) 
-                .catch(function (error) {
-                    console.log(error);
-                });
+                sendBtnStatus({ getParamBtn: false, sendParamBtn: response.data.sendParamBtn, getWaypointBtn: false, sendWaypointBtn: false });
             }
 
             if (response.data.sendParamBtn) {
                 getNewParamsFromServer();
+                sendBtnStatus({ getParamBtn: response.data.getParamBtn, sendParamBtn: false, getWaypointBtn: false, sendWaypointBtn: false })
+            }
 
-                axios.post(urls+"api/btnparam", { getParamBtn: response.data.getParamBtn, sendParamBtn: false })
+            if (response.data.sendWaypointBtn) {
+                axios.get(urls+'api/waypoints')
                 .then(function (response) {
-                    console.log(response);
-                }) 
+                    coordinates = response['data'].children;
+                    console.log(coordinates);
+
+                    sendWaypoint(coordinates);
+                })
                 .catch(function (error) {
                     console.log(error);
                 });
+
+                sendBtnStatus({ getParamBtn: false, sendParamBtn: false, getWaypointBtn: false, sendWaypointBtn: false });
+            }
+
+            if (response.data.getWaypointBtn) {
+                DOWNLOAD_MISSION();
+                sendBtnStatus({ getParamBtn: false, sendParamBtn: false, getWaypointBtn: false, sendWaypointBtn: false });
             }
 
             console.log(response.data);
@@ -71,7 +76,17 @@ let btnParamInterval = setInterval(() => {
 }, 3000);
 /* INTERVAL SEND, GET PARAMETER */
 
-/*  --------------------------------- MAVLINK --------------------------------- */
+function sendBtnStatus(objBtnStatus) {
+    axios.post(urls+"api/btnparam", objBtnStatus)
+    .then(function (response) {
+        console.log(response);
+    }) 
+    .catch(function (error) {
+        console.log(error);
+    });
+}
+
+/*  --------------------------------- START MAVLINK --------------------------------- */
 function START_MAVLINK() {
     console.log("Initializing MAVLink...");
 
@@ -109,7 +124,6 @@ function START_MAVLINK() {
                     v2.v2parse(data);
                 }
             });
-
             setInterval(() => {
                 // console.log(v1.att);
                 if (isInialize) {
@@ -127,6 +141,7 @@ function START_MAVLINK() {
         }
     }, 3000);
 }
+/*  --------------------------------- START MAVLINK --------------------------------- */
 
 function sendParamsToGCS() {
     if (use_v1) {
@@ -182,33 +197,7 @@ function getNewParamsFromServer() {
     }, 1000);
 }
 
-function GET_COORDINATE() {
-    let id = [];
-    let coordinates = [];
-    // let counter = 0;
-
-    setInterval(() => {
-        axios.get(urls+'api/waypoints')
-        .then(function (response) {
-            id.push(response['data'].children[0]._id);
-
-            if (id.length > 2) {
-                id.shift();
-                if (id[id.length-1] != id[id.length-2]) {
-                    coordinates = response['data'].children;
-                    SEND_WAYPOINT(coordinates);
-                    // counter++;
-                    // console.log(counter);
-                }
-            }
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-    }, 1000);
-}
-
-function MISSION_COUNT(lenCoordinate) {
+function missionCount(lenCoordinate) {
     let count = '';
     v1.mavLinkv1send.createMessage("MISSION_COUNT", {
         'target_system': 1,
@@ -221,22 +210,35 @@ function MISSION_COUNT(lenCoordinate) {
     serialport.write(count);
 }
 
-function SEND_WAYPOINT(coordinate) {
+function sendWaypoint(coordinate) {
     /* Algoritma untuk mengirim WAYPOINT */
     let len = coordinate.length;
     let counter = 0;
 
     setTimeout(() => {
-        MISSION_COUNT(len);
+        missionCount(len);
     }, 1000);
 
     setTimeout(() => {
         let intervalSend = setInterval(() => {
             let seq = v1.att.seq;
             if (counter < len) {
-                let latitude = coordinate[counter].latitude;
-                let longitude = coordinate[counter].longitude;
-                v1.NAV_WAYPOINT(serialport, latitude, longitude, seq);
+                let autocontinue = coordinate[counter].autocontinue;
+                let command = coordinate[counter].command;
+                let current = coordinate[counter].current;
+                let frame = coordinate[counter].frame;
+                let mission_type = coordinate[counter].mission_type;
+                let param1 = coordinate[counter].param1;
+                let param2 = coordinate[counter].param2;
+                let param3 = coordinate[counter].param3;
+                let param4 = coordinate[counter].param4;
+                let target_component =coordinate[counter].target_component;
+                let target_system = coordinate[counter].target_system;
+                let x = coordinate[counter].x;
+                let y = coordinate[counter].y;
+                let z = coordinate[counter].z
+
+                v1.NAV_WAYPOINT(serialport, autocontinue, command, current, frame, mission_type, param1, param2, param3, param4, target_component, target_system, x, y, z, seq);
                 counter += 1;
                 // console.log("SEND Counter: " + counter);
             } else {
@@ -245,4 +247,65 @@ function SEND_WAYPOINT(coordinate) {
         }, 1000);
     }, 1000);
     /* -------------------------------- */
+}
+
+function DOWNLOAD_MISSION() {
+    MISSION_REQUEST_LIST();
+
+    setTimeout(() => {
+        console.log("START DOWNLOADING MISSION");
+        let length = v1.download.count;
+        let i = 0;
+
+        let downloadInterval = setInterval(() => {
+            if (i < length) {
+                MISSION_REQUEST(i);
+                i++;
+            } else {
+                clearInterval(downloadInterval);
+                console.log("TERMINATE DOWNLOADING MISSION");
+
+                setTimeout(() => {
+                    console.log("RESULT ALL MISSION");
+                    console.log(v1.downloadedMission);
+
+                    axios.post(urls+"api/waypoint", v1.downloadedMission)
+                    .then(function (response) {
+                        console.log(response);
+                    }) 
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+                }, 1000);
+            }
+        }, 500);
+    }, 1000);
+}
+
+function MISSION_REQUEST_LIST() {
+    let count = '';
+    v1.mavLinkv1send.createMessage("MISSION_REQUEST_LIST", {
+        'target_system': 1,
+        'target_component': 255,
+        'mission_type': 0
+    }, function (message) {
+        console.log('v1 MISSION_REQUEST_LIST');
+        count = message.buffer;
+    });
+    serialport.write(count);
+}
+
+function MISSION_REQUEST(seq) {
+    let count = '';
+    v1.mavLinkv1send.createMessage("MISSION_REQUEST", {
+        'target_system': 1,
+        'target_component': 255,
+        'seq': seq,
+        'mission_type': 0
+    }, function (message) {
+        console.log('v1 MISSION_REQUEST');
+        // console.log(seq);
+        count = message.buffer;
+    });
+    serialport.write(count);
 }

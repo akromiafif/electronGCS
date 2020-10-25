@@ -89,6 +89,7 @@ mavLinkv1receive.on('ready', function (){
         mavLinkv1receive.on("GLOBAL_POSITION_INT", function(message, fields) {
             att.lon = fields.lon;
             att.lat = fields.lat;
+            console.log(fields);
         });
 
         mavLinkv1receive.on("MISSION_REQUEST", function (message, fields) {

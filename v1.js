@@ -26,7 +26,9 @@ let att = {
     alt: 0,
     climb: 0,
     seq: 0,
-    count: 0
+    count: 0,
+    lon: 99,
+    lat: 99
 }
 
 let download = {
@@ -88,13 +90,10 @@ mavLinkv1receive.on('ready', function (){
             console.log(fields);
         });
 
-        // mavLinkv1receive.on("message", function(message) {
-        //     console.log(message);
-        // });
-
-        // mavLinkv1receive.on("GPS_RAW_INT", function(message, fields) {
-        //     console.log(fields);
-        // });
+        mavLinkv1receive.on("GPS_RAW_INT", function(message, fields) {
+            att.lon = fields.lon;
+            att.lat = fields.lat
+        });
 
         mavLinkv1receive.on("MISSION_REQUEST", function (message, fields) {
             // console.log(fields);
@@ -124,15 +123,6 @@ mavLinkv1receive.on('ready', function (){
             i++;
             
         });
-        
-        // mavLinkv1receive.on("MISSION_ITEM_REACHED", function(message, fields) {
-        //     console.log(fields);
-        //     console.log("Mission reached");
-        // });
-        // mavLinkv1receive.on("MISSION_CURRENT", function(message, fields) {
-        //     console.log(fields);
-        //     console.log("Mission current");
-        // });
     });
 });
 
@@ -145,29 +135,6 @@ exports.att = att;
 exports.download = download;
 exports.downloadedMission = downloadedMission;
 exports.parameters = parameters;
-
-function RTLV1(serialport) {
-    let rtl = '';
-    mavLinkv1send.createMessage('COMMAND_LONG', {
-        target_system: 1,
-        target_component: 255,
-        command: 20,
-        confirmation: 0,
-        param1: 2,
-        param2: 0.0,
-        param3: 0.0,
-        param4: 0.0,
-        param5: 0.0,
-        param6: 0.0,
-        param7: 0.0
-    }, function(message) {
-        console.log('v1 RETURN TO LAUNCH');
-        rtl = message.buffer;
-    });
-    serialport.write(rtl);
-}
-
-exports.RTLV1 = RTLV1;
 
 /* http://mavlink.io */
 function NAV_WAYPOINT(serialport, autocontinue, command, current, frame, mission_type, param1, param2, param3, param4, target_component, target_system, x, y, z, seq) {

@@ -29,12 +29,12 @@ sendParam.addEventListener('click', function (event) {
 let use_v1 = false;
 exports.use_v1 = use_v1;
 let FC_v2_compatibility = false;
-let isInialize = false;
+let isInitialize = false;
 /* VARIABLE BUAT MAVLINK */
 
 /* INTERVAL SEND, GET PARAMETER */
 let btnStatusInterval = setInterval(() => {
-    if (isInialize) {
+    if (isInitialize) {
         axios.get(urls + "api/btnparams")
         .then(function (response) {
             if (response.data.getParamBtn) {
@@ -105,7 +105,7 @@ function START_MAVLINK() {
                         FC_v2_compatibility = false;
                         exports.FC_v2_compatibility = FC_v2_compatibility;
                         use_v1 = true;
-                        isInialize = true;
+                        isInitialize = true;
                     } else {
                         console.log("MAVLink V2 ready.");
                         console.log("FC uses MAVLink v2.");
@@ -124,9 +124,10 @@ function START_MAVLINK() {
                     v2.v2parse(data);
                 }
             });
+            
             setInterval(() => {
-                // console.log(v1.att);
-                if (isInialize) {
+                if (isInitialize) {
+                    // console.log(v1.att);
                     axios.post(urls+"api/flightdata", v1.att)
                       .then(function (response) {
                         // console.log(response);

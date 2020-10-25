@@ -61,10 +61,6 @@ mavLinkv1receive.on('ready', function (){
         //     };
         // });
 
-        // mavLinkv1receive.on('GLOBAL_POSITION_INT',function(message,fields){
-        //     console.log(fields);
-        // });
-
         // mavLinkv1receive.on('HEARTBEAT', function(message,fields){
         //     console.log('v1 dapet heartbeat...')
         // });
@@ -90,9 +86,9 @@ mavLinkv1receive.on('ready', function (){
             console.log(fields);
         });
 
-        mavLinkv1receive.on("GPS_RAW_INT", function(message, fields) {
+        mavLinkv1receive.on("GLOBAL_POSITION_INT", function(message, fields) {
             att.lon = fields.lon;
-            att.lat = fields.lat
+            att.lat = fields.lat;
         });
 
         mavLinkv1receive.on("MISSION_REQUEST", function (message, fields) {
